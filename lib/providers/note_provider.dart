@@ -22,12 +22,13 @@ class NoteNotifier extends Notifier<List<Note>> {
   late final NoteRepository _repository;
 
   NoteSortType _sortType = NoteSortType.createdAt;
+  String _searchQuery = '';
 
   @override
   List<Note> build() {
     _repository = NoteRepository();
     final notes = _repository.getAll();
-    return _applySort(notes);
+    return _applyFilterAndSort(notes);
   }
 
   // ===============================
@@ -35,17 +36,17 @@ class NoteNotifier extends Notifier<List<Note>> {
   // ===============================
   void addNote(Note note) {
     _repository.add(note);
-    state = _applySort(_repository.getAll());
+    state = _applyFilterAndSort(_repository.getAll());
   }
 
   void updateNote(Note note) {
     _repository.update(note);
-    state = _applySort(_repository.getAll());
+    state = _applyFilterAndSort(_repository.getAll());
   }
 
   void deleteNote(String id) {
     _repository.delete(id);
-    state = _applySort(_repository.getAll());
+    state = _applyFilterAndSort(_repository.getAll());
   }
 
   // ===============================
@@ -53,23 +54,38 @@ class NoteNotifier extends Notifier<List<Note>> {
   // ===============================
   void changeSort(NoteSortType type) {
     _sortType = type;
-    state = _applySort([...state]);
+    state = _applyFilterAndSort([...state]);
+  }
+  // SEARCH
+
+  void search(String query) {
+    _searchQuery = query.toLowerCase();
+    state = _applyFilterAndSort(_repository.getAll());
   }
 
-  List<Note> _applySort(List<Note> notes) {
+  List<Note> _applyFilterAndSort(List<Note> notes) {
+    // FILTER
+    if (_searchQuery.isNotEmpty) {
+      notes = notes.where((note) {
+        return note.title.toLowerCase().contains(_searchQuery) ||
+            note.content.toLowerCase().contains(_searchQuery);
+      }).toList();
+    }
+// SORT
     switch (_sortType) {
       case NoteSortType.updatedAt:
         notes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
         break;
 
       case NoteSortType.custom:
-        // future custom sorting
         break;
 
       case NoteSortType.createdAt:
-      notes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      default:
+        notes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         break;
     }
+
     return notes;
   }
 }

@@ -4,7 +4,6 @@ import 'package:flutter_application_1/pages/notepad/note_editor_page.dart';
 import 'package:flutter_application_1/providers/note_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 class NotepadPage extends ConsumerWidget {
   const NotepadPage({super.key});
 
@@ -22,8 +21,21 @@ class NotepadPage extends ConsumerWidget {
       // 🔴 INI BAGIAN PENTING
       body: Column(
         children: [
-          // (optional) header / search / dll
-          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Cari catatan...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onChanged: (value) {
+                ref.read(noteProvider.notifier).search(value);
+              },
+            ),
+          ),
 
           // ✅ ListView HARUS dibungkus Expanded
           Expanded(
@@ -41,29 +53,50 @@ class NotepadPage extends ConsumerWidget {
 
                       return Card(
                         margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
+                            horizontal: 12, vertical: 6),
                         child: ListTile(
-                           title: Text(
-    note.title,
-    maxLines: 1,
-    overflow: TextOverflow.ellipsis,
-  ),
-  subtitle: Text(
-    note.content,
-    maxLines: 2,
-    overflow: TextOverflow.ellipsis,
-  ),
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => NoteEditorPage(note: note),
-      ),
-    );
-  },
-),
+                          title: Text(
+                            note.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            note.content,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => NoteEditorPage(note: note),
+                              ),
+                            );
+                          },
+                          trailing: Tooltip(
+                            message: "Delete",
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.red,
+                              ),
+                              onPressed: () async {
+                                final confirm = await _confirmDelete(context);
+                                if (confirm) {
+                                  ref
+                                      .read(noteProvider.notifier)
+                                      .deleteNote(note.id);
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Catatan dihapus'),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -82,6 +115,32 @@ class NotepadPage extends ConsumerWidget {
   // ==============================
   // ADD NOTE DIALOG
   // ==============================
+  Future<bool> _confirmDelete(BuildContext context) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Hapus catatan?'),
+            content: const Text(
+              'Catatan yang dihapus tidak bisa dikembalikan.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Hapus'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   void _showAddNoteDialog(BuildContext context, WidgetRef ref) {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
@@ -117,24 +176,23 @@ class NotepadPage extends ConsumerWidget {
             ),
             ElevatedButton(
               onPressed: () {
-  final title = titleController.text.trim();
-  final content = contentController.text.trim();
+                final title = titleController.text.trim();
+                final content = contentController.text.trim();
 
-  if (title.isEmpty || content.isEmpty) return;
+                if (title.isEmpty || content.isEmpty) return;
 
-  final note = Note(
-    id: DateTime.now().millisecondsSinceEpoch.toString(),
-    title: title,
-    content: content,
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
-  );
+                final note = Note(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  title: title,
+                  content: content,
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
+                );
 
-  ref.read(noteProvider.notifier).addNote(note);
+                ref.read(noteProvider.notifier).addNote(note);
 
-  Navigator.pop(context);
-},
-
+                Navigator.pop(context);
+              },
               child: const Text('Simpan'),
             ),
           ],

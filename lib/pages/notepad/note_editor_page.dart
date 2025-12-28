@@ -3,7 +3,6 @@ import 'package:flutter_application_1/models/note.dart';
 import 'package:flutter_application_1/providers/note_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 class NoteEditorPage extends ConsumerStatefulWidget {
   final Note? note;
 
@@ -21,8 +20,7 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage> {
   void initState() {
     super.initState();
 
-    _titleController =
-        TextEditingController(text: widget.note?.title ?? '');
+    _titleController = TextEditingController(text: widget.note?.title ?? '');
     _contentController =
         TextEditingController(text: widget.note?.content ?? '');
   }
@@ -73,9 +71,12 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage> {
       appBar: AppBar(
         title: Text(isEdit ? 'Edit Note' : 'Tambah Note'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _save,
+          Tooltip(
+            message: 'Save',
+            child: IconButton(
+              icon: const Icon(Icons.save),
+              onPressed: _save,
+            ),
           ),
         ],
       ),
