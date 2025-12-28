@@ -10,12 +10,49 @@ class NotepadPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notes = ref.watch(noteProvider);
+final notifier = ref.watch(noteProvider.notifier);
+  final currentSort = notifier.currentSort;
 
     // debugPrint('🧱 UI rebuild, notes = ${notes.length}');
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notepad'),
+        actions: [
+          PopupMenuButton<NoteSortType>(
+  icon: const Icon(Icons.sort),
+  onSelected: (type) {
+    ref.read(noteProvider.notifier).changeSort(type);
+  },
+  itemBuilder: (context) => [
+    PopupMenuItem(
+      value: NoteSortType.createdAt,
+      child: Row(
+        children: [
+          if (currentSort == NoteSortType.createdAt)
+            const Icon(Icons.check, size: 18),
+          if (currentSort == NoteSortType.createdAt)
+            const SizedBox(width: 8),
+          const Text('Tanggal dibuat'),
+        ],
+      ),
+    ),
+    PopupMenuItem(
+      value: NoteSortType.updatedAt,
+      child: Row(
+        children: [
+          if (currentSort == NoteSortType.updatedAt)
+            const Icon(Icons.check, size: 18),
+          if (currentSort == NoteSortType.updatedAt)
+            const SizedBox(width: 8),
+          const Text('Tanggal diubah'),
+        ],
+      ),
+    ),
+  ],
+),
+
+        ],
       ),
 
       // 🔴 INI BAGIAN PENTING

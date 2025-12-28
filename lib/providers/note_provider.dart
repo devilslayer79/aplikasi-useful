@@ -23,6 +23,8 @@ class NoteNotifier extends Notifier<List<Note>> {
 
   NoteSortType _sortType = NoteSortType.createdAt;
   String _searchQuery = '';
+  
+  NoteSortType get currentSort => _sortType;
 
   @override
   List<Note> build() {
